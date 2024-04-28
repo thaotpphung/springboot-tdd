@@ -2,10 +2,7 @@ package com.postify.postify;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.x509;
-
 import java.util.List;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -21,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import com.postify.postify.error.ApiError;
 import com.postify.postify.shared.GenericResponse;
 import com.postify.postify.user.User;
 import com.postify.postify.user.UserRepository;
@@ -172,6 +170,19 @@ public class UserControllerTest {
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 	}
 	
+	@Test
+	public void postUser_whenUserIsInvalid_receiveApiError() {
+		User user = new User();
+		ResponseEntity<ApiError> response = postSignup(user, ApiError.class);
+		assertThat(response.getBody().getUrl()).isEqualTo(API_1_0_USERS);
+	}
+	
+	@Test
+	public void postUser_whenUserIsInvalid_receiveApiErrorWithValidationErrors() {
+		User user = new User();
+		ResponseEntity<ApiError> response = postSignup(user, ApiError.class);
+		assertThat(response.getBody().getValidationErrors().size()).isEqualTo(3);
+	}
 	
 	public <T> ResponseEntity<T> postSignup(Object request, Class<T> response) {
 		return testRestTemplate.postForEntity(API_1_0_USERS, request, response);	
